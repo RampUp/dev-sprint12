@@ -1,3 +1,5 @@
 settings.rb
 
-tmp/
+tmp/*
+
+log/*

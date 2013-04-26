@@ -4,8 +4,9 @@ require 'json'
 
 class Song
   # this class wraps the EchoNest Song API: http://developer.echonest.com/docs/v4/song.html
-  VALID_BUCKETS = [ "audio_summary", "artist_familiarity", "artist_hotttnesss", "artist_location", "song_hotttnesss", "song_type", "tracks", "id:rosetta-catalog", "id:Personal-Catalog-ID" ]
+  VALID_BUCKETS = [ "audio_summary", "artist_familiarity", "artist_hotttnesss", "artist_location", "song_hotttnesss", "song_type", "tracks", "id:rosetta-catalog", "id:Personal-Catalog-ID", "id:spotify-WW" ]
   VALID_SORTS   = [ "tempo-asc", "duration-asc", "loudness-asc", "artist_familiarity-asc", "artist_hotttnesss-asc", "artist_start_year-asc", "artist_start_year-desc", "artist_end_year-asc", "artist_end_year-desc", "song_hotttness-asc", "latitude-asc", "longitude-asc", "mode-asc", "key-asc", "tempo-desc", "duration-desc", "loudness-desc", "artist_familiarity-desc", "artist_hotttnesss-desc", "song_hotttnesss-desc", "latitude-desc", "longitude-desc", "mode-desc", "key-desc", "energy-asc", "energy-desc", "danceability-asc", "danceability-desc" ]
+  ARRAY_KEYS    = [ :bucket ]
 
   def initialize
     @api_key = EchoNestApp::Application.config.echo_nest_api_key
@@ -90,11 +91,21 @@ class Song
   def build_url(query, opts={})
     handle_opts(opts)
     url = "#{base_url}" << query
-    opts.each do |k,v|
-      value = ( v.gsub!(" ", "\+") || v )
-      url << "&#{k}=#{value}"
+    opts.each do | k, v |
+      if ARRAY_KEYS.include?(k)
+        v.each do |val|
+          sub_and_add(url, k, val)
+        end
+      else
+        sub_and_add(url, k, v)
+      end
     end
     url
+  end
+
+  def sub_and_add(url, k, v)
+    value = v.is_a?(String) ? ( v.gsub!(" ", "\+") || v ) : v
+    url << "&#{k}=#{value}"
   end
 
   def handle_opts(opts)
